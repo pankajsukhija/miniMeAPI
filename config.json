@@ -1,0 +1,18 @@
+{
+
+  "secretKey" : "kamehameha",
+  
+  "MySQLConfig" : {
+    "host" : "remotemysql.com",
+    "port" : 3306,
+    "db_usr" : "8v8ZGzy0sG",
+    "db_usr_passwd" : "eo0RgHj0JY",
+    "dB_name" : "8v8ZGzy0sG"
+  },
+
+  "MongoDBConfig" : {
+    "uri" : "mongodb+srv://testUser:testPassword@cluster0-qd7vz.mongodb.net/test?retryWrites=true",
+    "dbName" : "testDB"
+  }
+
+}
