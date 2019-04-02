@@ -40,7 +40,7 @@ app.get("/authUser", (req, res) => {
 
 app.get("/updateAbout",
 // currently only accepting alpha numberic value for testing 
-[check("about").isAlphanumeric().isLength({min : 1, max : 300})], (req, res) => {
+[check("about").is.isLength({min : 1, max : 300})], (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() });
@@ -53,5 +53,20 @@ app.get("/updateAbout",
         });
     }}
 );
+
+app.get("/latestUsers", (req, res) => {
+    // Fetches 6 latest users and their about section from DB.
+    db.latestUsers(result => {
+        res.json(result);
+    });
+});
+
+app.get("/reqUser", (req, res) => {
+    // Public can request Profile of users without a token.
+    let username = req.query.username.toLowerCase();
+    db.reqProfile(username, (dbRes) => {
+        res.json(dbRes);
+    });
+});
 
 app.listen(8080);

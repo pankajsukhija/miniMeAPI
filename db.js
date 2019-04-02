@@ -54,8 +54,7 @@ function regUser(username, passwd, email, dbRes){
 
 function authUser(username, passwd, dbRes){
     MongoClient.connect(dbURL, { useNewUrlParser: true },  (err, client) => {
-        // Will find a better to do this.
-        // Maybe create seprate function to connect. 
+        // BETTER WAY IS TO WRITE A FUNCTION TO SELECT COLLECTION*****
         if (err) dbRes({msg : "ERROR"});
         else {
             const collection = client.db(dbName).collection("users");
@@ -98,12 +97,17 @@ function authUser(username, passwd, dbRes){
     });
 }
 
+function isValidToken(username, token, callback){
+
+}
+
 function updateAbout(username, token, about, dbRes){
     MongoClient.connect(dbURL, { useNewUrlParser: true },  (err, client) => {
         if (err) dbRes({msg : "ERROR"});
         else{
             let collection = client.db(dbName).collection("accessTokens");
             // Test is access token is valid
+            // THIS NEEDS TO BE A SEPERATE FUNCTION TOO*****
             collection.find({$and : [{"username" : username},{"token" : token}]}).toArray( (err, result) => {
                 if (err) dbRes({msg : "ERROR"});
                 else if (result.length == 1){
@@ -125,6 +129,45 @@ function updateAbout(username, token, about, dbRes){
     });
 }
 
-exports.regUser = regUser;
+function latestUsers(dbRes) {
+    MongoClient.connect(dbURL, { useNewUrlParser: true },  (err, client) => {
+        if (err) dbRes({msg : "ERROR"});
+        else{
+            let collection = client.db(dbName).collection("users");
+            // Get 6 latest entries from collection users
+            // only username & about field is read from documents
+            collection.find({}, {projection: { _id: 0, username: 1, about: 1 }}).sort({ $natural: -1 }).limit(6).toArray((err, result) => {
+                if (err) dbRes({msg : "ERROR"});
+                else{
+                    dbRes({
+                        msg : "SUCCESS",
+                        result : result
+                    })
+                }
+            });
+        }
+    });
+}
+
+function reqProfile(reqUser, dbRes){
+    MongoClient.connect(dbURL, { useNewUrlParser: true },  (err, client) => {
+        if (err) dbRes({msg : "ERROR"});
+        else{
+            let collection = client.db(dbName).collection("users");
+            collection.findOne({username : reqUser}, { projection: { _id: 0, username: 1, about: 1, lastLogin: 1 }}, (err, result) => {
+            if (err) dbRes({msg : "ERROR"});
+            else{
+                dbRes({
+                    msg : "SUCCESS",
+                    result : result
+                });
+            }});
+        }}
+    );
+}
+
+exports.regUser = regUser; // ***
 exports.authUser = authUser;
 exports.updateAbout = updateAbout;
+exports.latestUsers = latestUsers;
+exports.reqProfile = reqProfile; //*** Need to export as module
