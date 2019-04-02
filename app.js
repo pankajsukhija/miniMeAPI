@@ -40,7 +40,7 @@ app.get("/authUser", (req, res) => {
 
 app.get("/updateAbout",
 // currently only accepting alpha numberic value for testing 
-[check("about").is.isLength({min : 1, max : 300})], (req, res) => {
+[check("about").isAlphanumeric().isLength({min : 1, max : 300})], (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
     return res.status(422).json({ errors: errors.array() });
