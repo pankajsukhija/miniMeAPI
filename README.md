@@ -15,3 +15,4 @@ TO-DO & ISSUES
 
 
 ** config file uses my free monogodb service for testing purpose.
+** Note to myself : A neat way to write => (https://medium.com/@tkssharma/writing-neat-asynchronous-node-js-code-with-promises-async-await-fa8d8b0bcd7c)
