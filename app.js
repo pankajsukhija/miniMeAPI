@@ -2,6 +2,11 @@ const express = require("express");
 const { check, validationResult } = require('express-validator/check');
 const db = require("./db");
 const app = express();
+const cors = require('cors');
+
+// Enabled CORS
+app.use(cors());
+app.options('*', cors());
 
 app.get("/", (req, res) => {
     res.send("<h1>Hello :)</h1>");
@@ -69,4 +74,4 @@ app.get("/reqUser", (req, res) => {
     });
 });
 
-app.listen(8080);
+app.listen(8081);
