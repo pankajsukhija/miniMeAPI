@@ -13,13 +13,19 @@ function regUser(username, passwd, email, dbRes){
     // Database is created automatically when a document is added to collection.
     // http://localhost:8080/regUser?username=testtest&passwd=testtest&email=testtest%40pokemon.com
     MongoClient.connect(dbURL, { useNewUrlParser: true },  (err, client) => {
-        if (err) dbRes({msg : "ERROR"}); // Not loggig errors for now.
+        if (err){
+            client.close;
+            dbRes({msg : "ERROR"});
+         } // Not loggig errors for now.
         else {
             const collection = client.db(dbName).collection("users");
 
             // Checks if username OR email already exists in collection.
             collection.find({$or:[{"username" : username},{"email" : email}]}).toArray( (err, result) => {
-                if (err) dbRes({msg : "ERROR"});
+                if (err){
+                    client.close;
+                    dbRes({msg : "ERROR"});
+                }
                 else if (result.length !== 0){
                     dbRes({msg : "EXIST"});
                     client.close;
@@ -38,7 +44,10 @@ function regUser(username, passwd, email, dbRes){
                         };
                         // Inserst document to collection.
                         collection.insertOne(dataObject, (err) => {
-                            if (err) dbRes({msg : "ERROR"});
+                            if (err){
+                                dbRes({msg : "ERROR"});
+                                client.close;
+                            }
                             else {
                                 dbRes({msg : "SUCCESS"});
                                 client.close;
@@ -55,14 +64,20 @@ function regUser(username, passwd, email, dbRes){
 function authUser(username, passwd, dbRes){
     MongoClient.connect(dbURL, { useNewUrlParser: true },  (err, client) => {
         // BETTER WAY IS TO WRITE A FUNCTION TO SELECT COLLECTION*****
-        if (err) dbRes({msg : "ERROR"});
+        if (err){
+            dbRes({msg : "ERROR"});
+            client.close;
+        }
         else {
             const collection = client.db(dbName).collection("users");
             encrypt.hashPasswd(passwd, secretKey, (hash) => {
                 let passwdHash = hash;
                 // Test if username and passHash matches those in the collection/
                 collection.find({$and : [{"username" : username},{"passwdHash" : passwdHash}]}).toArray( (err, result) => {
-                    if (err) dbRes({msg : "ERROR"});
+                    if (err){
+                        dbRes({msg : "ERROR"});
+                        client.close;
+                    }
                     else if (result.length == 1){
                         encrypt.generateRandomToken(token => {
                             // Use another collection to store token
@@ -79,17 +94,22 @@ function authUser(username, passwd, dbRes){
                                 collection.updateOne({"username" : username}, {$currentDate : {
                                     lastLogin : true,
                                  }}, (err) => {
-                                    if (err) dbRes({msg: "ERROR"});
+                                    if (err){
+                                        dbRes({msg: "ERROR"});
+                                        client.close;
+                                    }
                                     else{
                                         dbRes({
                                             msg : "SUCCESS",
                                             token : token});
+                                        client.close;
                                     }
                                 });
                             })
                         });}
                     else{
                         dbRes({msg : "INVALID"});
+                        client.close;
                     }
                 });
             });
@@ -97,32 +117,38 @@ function authUser(username, passwd, dbRes){
     });
 }
 
-function isValidToken(username, token, callback){
-
-}
-
 function updateAbout(username, token, about, dbRes){
     MongoClient.connect(dbURL, { useNewUrlParser: true },  (err, client) => {
-        if (err) dbRes({msg : "ERROR"});
+        if (err){
+            dbRes({msg : "ERROR"});
+            client.close;
+        }
         else{
             let collection = client.db(dbName).collection("accessTokens");
             // Test is access token is valid
             // THIS NEEDS TO BE A SEPERATE FUNCTION TOO*****
             collection.find({$and : [{"username" : username},{"token" : token}]}).toArray( (err, result) => {
-                if (err) dbRes({msg : "ERROR"});
+                if (err){
+                    dbRes({msg : "ERROR"});
+                    client.close;
+                }
                 else if (result.length == 1){
                     // Update `about` field in document
                     let collection = client.db(dbName).collection("users");
                     collection.updateOne({"username" : username}, {$set : {
                         "about" : about
                      }}, (err) => {
-                        if (err) dbRes({msg: "ERROR"});
+                        if (err){
+                            dbRes({msg: "ERROR"});
+                        }
                         else{
                             dbRes({msg : "SUCCESS"});
+                            client.close;
                         }
                     });
                 }else{
                     dbRes({msg : "INVALID"});
+                    client.close;
                 }
             });
         }
@@ -131,18 +157,25 @@ function updateAbout(username, token, about, dbRes){
 
 function latestUsers(dbRes) {
     MongoClient.connect(dbURL, { useNewUrlParser: true },  (err, client) => {
-        if (err) dbRes({msg : "ERROR"});
+        if (err){
+            dbRes({msg : "ERROR"});
+            client.close;
+        }
         else{
             let collection = client.db(dbName).collection("users");
             // Get 6 latest entries from collection users
             // only username & about field is read from documents
             collection.find({}, {projection: { _id: 0, username: 1, about: 1 }}).sort({ $natural: -1 }).limit(6).toArray((err, result) => {
-                if (err) dbRes({msg : "ERROR"});
+                if (err){
+                    dbRes({msg : "ERROR"});
+                    client.close;
+                }
                 else{
                     dbRes({
                         msg : "SUCCESS",
                         result : result
                     })
+                    client.close;
                 }
             });
         }
@@ -151,16 +184,23 @@ function latestUsers(dbRes) {
 
 function reqProfile(reqUser, dbRes){
     MongoClient.connect(dbURL, { useNewUrlParser: true },  (err, client) => {
-        if (err) dbRes({msg : "ERROR"});
+        if (err){
+            dbRes({msg : "ERROR"});
+            client.close;
+        }
         else{
             let collection = client.db(dbName).collection("users");
             collection.findOne({username : reqUser}, { projection: { _id: 0, username: 1, about: 1, lastLogin: 1 }}, (err, result) => {
-            if (err) dbRes({msg : "ERROR"});
+            if (err){
+                dbRes({msg : "ERROR"});
+                client.close;
+            }
             else{
                 dbRes({
                     msg : "SUCCESS",
                     result : result
                 });
+                client.close;
             }});
         }}
     );
